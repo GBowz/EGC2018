@@ -65,13 +65,17 @@ while True:
 
             prices[Symbol][current_epoch] = Price
             price_list = prices[Symbol]
-            moving_average = get_instrument_SMA(price_list, 10)
+            moving_average = get_instrument_SMA(price_list, 60)
 
             last_moving_average = moving_average[list(moving_average.keys())[-1]]
 
+            predicted_return = ((last_moving_average / Price) * md["epoch_return"]) - 1
+            if (predicted_return > 1):
+                predicted_return = Price * md["epoch_return"]
+
             predictions.append({
                 'instrument_id': ID,#md['instrument_id'],
-                'predicted_return': (last_moving_average / Price) - 1
+                'predicted_return': predicted_return
             })
 
     pred_req = {'token': token, 'epoch': prediction_epoch, 'predictions': predictions}
