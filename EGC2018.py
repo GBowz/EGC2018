@@ -189,6 +189,8 @@ def show_SMA_graph(data_frame, id_symbols):
     plt.legend(id_symbols)
     plt.show()
 
+
+
 if __name__ == "__main__":
     IDs = Firm_ID()
     Sym_List = Line_Names(IDs)

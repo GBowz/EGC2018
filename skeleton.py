@@ -3,6 +3,8 @@ import requests
 #import random
 #import string
 import time
+#import EGC2018
+from EGC2018 import Line_Names, get_instrument_prices, get_instrument_SMA
 
 #Very simple example to demonstrate usage of the API.
 
@@ -23,6 +25,8 @@ print(f'token = {token}')
 
 last_epoch = None
 
+Sym_List = Line_Names(list(range(500)))
+
 while True:
     epoch_res = requests.get('http://egchallenge.tech/epoch').json()
     current_epoch = epoch_res['current_epoch']
@@ -39,9 +43,14 @@ while True:
     predictions = []
     for md in marketdata:
         if md['is_trading']:
+            
+            ID = md['instrument_id']
+            Symbol = Sym_List[ID]
+            Price = md['price']
+            
             predictions.append({
-                'instrument_id': md['instrument_id'],
-                'predicted_return': -0.413845 * md['epoch_return']
+                'instrument_id': ID,#md['instrument_id'],
+                'predicted_return': -0.417795 * md['epoch_return']
             })
 
     pred_req = {'token': token, 'epoch': prediction_epoch, 'predictions': predictions}
