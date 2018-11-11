@@ -108,7 +108,39 @@ def graph(IDs, Sym_List):
 
 
 # In[277]:
+def calculate_instrument_SMA(instrument_id, id_symbol, price_df, time_window):
+    '''
+    Calculates the simple moving average for an instrument ID.
 
+    Args:
+        instrument_id (int): The ID of the instrument to calculate SMA for.
+        id_symbol (string): The symbol of the instrument.
+        price_df (DataFrame): The data frame containing the prices for all epochs of the provided instrument.
+        time_window (int): The amount of epochs to consider for the moving average.
+
+    Returns:
+        (dict): A dictionary of key (epoch) and value (average after time_window amounts of epochs considered).
+    '''
+    running_price_list = {}
+    # Iterate through every epoch for a particular instrument symbol
+    instrument_epoch_iterator = 0
+    number_of_epochs = len(price_df[id_symbol])
+    while (instrument_epoch_iterator < number_of_epochs):
+        running_total = 0
+        # TODO: The epoch price might return None eventually, we need to fix this.
+        running_total_counter = 0
+        for time_window_iterator in range(time_window):
+            if (instrument_epoch_iterator >= number_of_epochs):
+                break
+            epoch_price = price_df[id_symbol][instrument_epoch_iterator]
+            running_total += epoch_price
+            instrument_epoch_iterator += 1
+            running_total_counter += 1
+        running_total /= running_total_counter + 1
+
+        running_price_list[instrument_epoch_iterator] = running_total
+
+    return running_price_list
 
 def create_SMA_data_frame(instrument_ids, id_symbols, time_window, price_df):
     '''
@@ -132,44 +164,11 @@ def create_SMA_data_frame(instrument_ids, id_symbols, time_window, price_df):
         instrument_id = instrument_ids[i]
         id_symbol = id_symbols[i]
 
-        running_price_list = {}
-        # Iterate through every epoch for a particular instrument symbol
-        instrument_epoch_iterator = 0
-        number_of_epochs = len(price_df[id_symbol])
-        while (instrument_epoch_iterator < number_of_epochs):
-            running_total = 0
-            # TODO: The epoch price might return None eventually, we need to fix this.
-            running_total_counter = 0
-            for time_window_iterator in range(time_window):
-                if (instrument_epoch_iterator >= number_of_epochs):
-                    break
-                epoch_price = price_df[id_symbol][instrument_epoch_iterator]
-                running_total += epoch_price
-                instrument_epoch_iterator += 1
-                running_total_counter += 1
-            running_total /= running_total_counter + 1
+        running_price_list = calculate_instrument_SMA(instrument_id, id_symbol, price_df, time_window)
 
-            running_price_list[instrument_epoch_iterator] = running_total
-
-        print("TIME TO PRINT")
-        print("TIME TO PRINT")
-        print("TIME TO PRINT")
-        print("TIME TO PRINT")
         associated_series = pandas.Series(running_price_list)
-        print(associated_series)
         new_sma_data_frame = pandas.DataFrame({id_symbol: associated_series})
-        print("SUCCESSANT")
-        print("SUCCESSANT")
-        print("SUCCESSANT")
-        print("SUCCESSANT")
-        print(new_sma_data_frame)
         sma_data_frame = sma_data_frame.append(new_sma_data_frame)
-        print("RESULTANT")
-        print("RESULTANT")
-        print("RESULTANT")
-        print("RESULTANT")
-        print("RESULTANT")
-        print(sma_data_frame)
 
     return sma_data_frame
 
@@ -190,64 +189,8 @@ def show_SMA_graph(data_frame, id_symbols):
     plt.legend(id_symbols)
     plt.show()
 
-# def Prices(IDs, Sym_List):
-#     '''
-#     Makes a GET request and returns the prices of all supplied 
-
-#     Args:
-#         IDs (list): List of IDs of the prices to request.
-#         Sym_List (list): List of symbols that map to the list argument of IDs.
-
-#     Returns:
-#         (DataFrame): A table of IDs and prices combined together.
-#     '''
-#     id_data = requests.get(
-#         'http://egchallenge.tech/marketdata/instrument/'+IDs[0]).json()
-#     #pricedata=[json["price"] for json in id_data]
-#     Name = Sym_List[0]
-#     Price_df = pandas.DataFrame({Name: pandas.DataFrame(id_data)["price"]})
-
-#     for i in range(1, len(IDs)):
-#         id_data = requests.get(
-#             'http://egchallenge.tech/marketdata/instrument/'+IDs[i]).json()
-#         #pricedata=[json["price"] for json in id_data]
-#         Name = Sym_List[i]
-#         Price_df2 = pandas.DataFrame(
-#             {Name: pandas.DataFrame(id_data)["price"]})
-#         Price_df = Price_df.join(Price_df2)
-
-#     # print(Price_df)
-#     return Price_df
-
-# def SMA_graph(IDs, Sym_List):
-#     for i in range(len(IDs)):
-#         plt.plot(Price_df)
-
-#         plt.ylabel("Prices")
-#         plt.xlabel("Epoch")
-#     plt.legend(Sym_List)
-#     plt.show()
-
-# def graph(IDs, Sym_List):
-#     '''
-#     Creates a line graph of epoch against instrument price.
-
-#     Args:
-#         IDs (list): The list of IDs of instruments to use in the graph.
-#         Sym_List (list): The list of symbols that map to the IDs of the instruments.
-#     '''
-#     for i in range(len(IDs)):
-#         plt.plot(Price_df)
-
-#         plt.ylabel("Prices")
-#         plt.xlabel("Epoch")
-#     plt.legend(Sym_List)
-#     plt.show()
-
 IDs = Firm_ID()
 Sym_List = Line_Names(IDs)
 Price_df = Prices(IDs, Sym_List)
 averages_60 = create_SMA_data_frame(IDs, Sym_List, 60, Price_df)
 show_SMA_graph(averages_60, Sym_List)
-# show_SMA_graph(averages_30, Sym_List)
-# show_SMA_graph(averages_10, Sym_List)
