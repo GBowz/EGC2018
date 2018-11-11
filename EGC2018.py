@@ -8,7 +8,7 @@ import requests
 import pandas
 import matplotlib.patches as mpatches
 import pandas as pd
-
+from math import sqrt
 # In[278]:
 
 
@@ -135,25 +135,54 @@ def get_instrument_SMA(instrument_price_list, time_window):
     # Iterate through every epoch for a particular instrument symbol
     instrument_epoch_iterator = 0
     number_of_epochs = len(instrument_price_list)
+
+    running_deviation_list = {}
+    running_deviation_counter = -1
+    exponential_moving_average = 0
+    exponential_weighted_standard_deviation = 0
+
     while (instrument_epoch_iterator < number_of_epochs):
         running_total = 0
         # TODO: The epoch price might return None eventually, we need to fix this.
         running_total_counter = 0
+        current_running_deviation = []
         for time_window_iterator in range(time_window):
             if (instrument_epoch_iterator >= number_of_epochs):
                 break
             try:
                 epoch_price = instrument_price_list[instrument_epoch_iterator]
                 running_total += epoch_price
+
+                alpha_decay = 1 - ((number_of_epochs - instrument_epoch_iterator) / number_of_epochs)
+                if (exponential_moving_average == 0):
+                    exponential_moving_average = epoch_price
+                else:
+                    exponential_moving_average = alpha_decay * epoch_price + (1 - alpha_decay) * exponential_moving_average
+
+                if (running_deviation_counter > -1):
+                    difference = epoch_price - running_price_list[list(running_price_list.keys())[-1]]
+                    difference *= difference
+                    exponential_weighted_standard_deviation = alpha_decay * sqrt(difference) + (1 - alpha_decay) * exponential_weighted_standard_deviation
+                    current_running_deviation.append(difference)
             except:
                 pass
             instrument_epoch_iterator += 1
             running_total_counter += 1
         running_total /= running_total_counter + 1
 
+        if len(current_running_deviation) > 0:
+            running_variance = 0
+            for squared_number in current_running_deviation:
+                running_variance += squared_number
+            running_variance /= len(current_running_deviation)
+            standard_deviation = sqrt(running_variance)
+
+            running_deviation_list[instrument_epoch_iterator] = standard_deviation
+
+        running_deviation_counter += 1
         running_price_list[instrument_epoch_iterator] = running_total
 
-    return running_price_list
+    return running_price_list, running_deviation_list, exponential_moving_average, exponential_weighted_standard_deviation
 
 
 # In[277]:
@@ -240,7 +269,7 @@ def show_SMA_graph(data_frame, id_symbols):
     plt.legend(id_symbols)
     plt.show()
 
-# def create_EMA_Dataframe():
+# def create_EMA_Dataframe ():
 
 #     All_EMA = []
 

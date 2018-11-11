@@ -1,6 +1,6 @@
 #import pip
 import requests
-#import random
+import random
 #import string
 import time
 #import EGC2018
@@ -65,13 +65,26 @@ while True:
 
             prices[Symbol][current_epoch] = Price
             price_list = prices[Symbol]
-            moving_average = get_instrument_SMA(price_list, 60)
 
-            last_moving_average = moving_average[list(moving_average.keys())[-1]]
+            moving_average, standard_deviation, exp_average, exp_std_dev = get_instrument_SMA(price_list, (current_epoch % 60) + 1)
 
-            predicted_return = ((last_moving_average / Price) * md["epoch_return"]) - 1
-            if (predicted_return > 1):
-                predicted_return = Price * md["epoch_return"]
+            # last_moving_average = moving_average[list(moving_average.keys())[-1]]
+            last_moving_average = exp_average
+            # last_moving_standard_deviation = standard_deviation[list(standard_deviation.keys())[-1]]
+            last_moving_standard_deviation = exp_std_dev
+            
+
+            if last_moving_average == 0:
+                last_moving_average = Price
+                print("Had to correct LMA...")
+
+            predicted_return = ((last_moving_average / Price) * md["epoch_return"] * (last_moving_standard_deviation / last_moving_average))
+
+            if int(zero_based_index) % 1000 == 0:
+                print(Price)
+                print("LMA: " + str(last_moving_average))
+                print("LMSD: " + str(last_moving_standard_deviation))
+                print(predicted_return) 
 
             predictions.append({
                 'instrument_id': ID,#md['instrument_id'],
