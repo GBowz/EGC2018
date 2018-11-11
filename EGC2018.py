@@ -52,6 +52,18 @@ def Line_Names(IDs):
 
 
 # In[280]:
+def get_instrument_prices(instrument_id):
+    '''
+    Gets the price database for an instrument ID.
+
+    Args:
+        instrument_id (int): The ID of the instrument.
+
+    Returns:
+        (Series): The list of prices for every epoch for an instrument ID.
+    '''
+    id_data = requests.get('http://egchallenge.tech/marketdata/instrument/'+str(instrument_id)).json()
+    return pandas.DataFrame(id_data)["price"]
 
 
 def Prices(IDs, Sym_List):
@@ -105,6 +117,39 @@ def graph(IDs, Sym_List):
     plt.xlabel("Epoch")
     plt.legend(Sym_List)
     plt.show()
+
+def get_instrument_SMA(instrument_id, instrument_price_list, time_window):
+    '''
+    Gets a dictionary of simple moving averages for every time_window epochs.
+
+    Args:
+        instrument_id (int): ID of the instrument.
+        instrument_price_list (list): A list of prices for every instrument ID.
+        time_window (int): The amount of epochs to consider for the moving average.
+
+    Returns:
+        (dict) Key: (int) epoch, Value: (float) average
+    '''
+    running_price_list = {}
+    # Iterate through every epoch for a particular instrument symbol
+    instrument_epoch_iterator = 0
+    number_of_epochs = len(instrument_price_list)
+    while (instrument_epoch_iterator < number_of_epochs):
+        running_total = 0
+        # TODO: The epoch price might return None eventually, we need to fix this.
+        running_total_counter = 0
+        for time_window_iterator in range(time_window):
+            if (instrument_epoch_iterator >= number_of_epochs):
+                break
+            epoch_price = instrument_price_list[instrument_epoch_iterator]
+            running_total += epoch_price
+            instrument_epoch_iterator += 1
+            running_total_counter += 1
+        running_total /= running_total_counter + 1
+
+        running_price_list[instrument_epoch_iterator] = running_total
+
+    return running_price_list
 
 
 # In[277]:
