@@ -234,6 +234,39 @@ def show_SMA_graph(data_frame, id_symbols):
     plt.legend(id_symbols)
     plt.show()
 
+def create_EMA_Dataframe():
+    
+    All_EMA = []
+    
+    for i in range(len(IDs)):
+        Price_List = Price_df[Sym_List[i]]
+        EMA_PL = [Price_List[0]]
+        
+        for i in range(1, len(Price_List)):
+            EMA_PL.append(0.5*Price_List[i]+(1-0.5)*EMA_PL[i-1])
+        All_EMA.append(EMA_PL)
+
+    EMA_P_DF = pandas.DataFrame(All_EMA).T
+    
+    print(EMA_P_DF[::60]) 
+    return EMA_P_DF[::60]
+        
+
+
+EMA_DF = create_EMA_Dataframe()
+
+def EMA_graph(IDs, Sym_List):
+    
+    for i in range(len(IDs)):
+        plt.plot(EMA_DF)
+
+        plt.ylabel("Prices")
+        plt.xlabel("Epoch")
+    plt.legend(Sym_List)
+    plt.show()
+
+EMA_graph(IDs, Sym_List)
+
 
 
 if __name__ == "__main__":
