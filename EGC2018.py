@@ -62,9 +62,13 @@ def get_instrument_prices(instrument_id):
     Returns:
         (Series): The list of prices for every epoch for an instrument ID.
     '''
-    id_data = requests.get('http://egchallenge.tech/marketdata/instrument/'+str(instrument_id)).json()
+    id_data = requests.get(
+        'http://egchallenge.tech/marketdata/instrument/'+str(instrument_id)).json()
     return pandas.DataFrame(id_data)["price"]
 
+# def supplement_prices(existing_prices, current_epoch, IDs, Sym_List):
+#     if IDs[0] in existing_prices:
+#         if 
 
 def Prices(IDs, Sym_List):
     '''
@@ -78,17 +82,14 @@ def Prices(IDs, Sym_List):
         (DataFrame): A table of IDs and prices combined together.
     '''
     id_data = requests.get(
-        'http://egchallenge.tech/marketdata/instrument/'+IDs[0]).json()
+        'http://egchallenge.tech/marketdata/instrument/'+str(IDs[0])).json()
     #pricedata=[json["price"] for json in id_data]
     Name = Sym_List[0]
     Price_df = pandas.DataFrame({Name: pandas.DataFrame(id_data)["price"]})
 
-    print(pandas.DataFrame(id_data)["price"])
-    print(type(pandas.DataFrame(id_data)["price"]))
-
     for i in range(1, len(IDs)):
         id_data = requests.get(
-            'http://egchallenge.tech/marketdata/instrument/'+IDs[i]).json()
+            'http://egchallenge.tech/marketdata/instrument/'+str(IDs[i])).json()
         #pricedata=[json["price"] for json in id_data]
         Name = Sym_List[i]
         Price_df2 = pandas.DataFrame(
@@ -118,12 +119,12 @@ def graph(IDs, Sym_List):
     plt.legend(Sym_List)
     plt.show()
 
-def get_instrument_SMA(instrument_id, instrument_price_list, time_window):
+
+def get_instrument_SMA(instrument_price_list, time_window):
     '''
     Gets a dictionary of simple moving averages for every time_window epochs.
 
     Args:
-        instrument_id (int): ID of the instrument.
         instrument_price_list (list): A list of prices for every instrument ID.
         time_window (int): The amount of epochs to consider for the moving average.
 
@@ -141,8 +142,11 @@ def get_instrument_SMA(instrument_id, instrument_price_list, time_window):
         for time_window_iterator in range(time_window):
             if (instrument_epoch_iterator >= number_of_epochs):
                 break
-            epoch_price = instrument_price_list[instrument_epoch_iterator]
-            running_total += epoch_price
+            try:
+                epoch_price = instrument_price_list[instrument_epoch_iterator]
+                running_total += epoch_price
+            except:
+                pass
             instrument_epoch_iterator += 1
             running_total_counter += 1
         running_total /= running_total_counter + 1
@@ -187,6 +191,7 @@ def calculate_instrument_SMA(instrument_id, id_symbol, price_df, time_window):
 
     return running_price_list
 
+
 def create_SMA_data_frame(instrument_ids, id_symbols, time_window, price_df):
     '''
     Creates a DataFrame based on the simple moving average of instrument data.
@@ -209,7 +214,8 @@ def create_SMA_data_frame(instrument_ids, id_symbols, time_window, price_df):
         instrument_id = instrument_ids[i]
         id_symbol = id_symbols[i]
 
-        running_price_list = calculate_instrument_SMA(instrument_id, id_symbol, price_df, time_window)
+        running_price_list = calculate_instrument_SMA(
+            instrument_id, id_symbol, price_df, time_window)
 
         associated_series = pandas.Series(running_price_list)
         new_sma_data_frame = pandas.DataFrame({id_symbol: associated_series})
@@ -234,6 +240,37 @@ def show_SMA_graph(data_frame, id_symbols):
     plt.legend(id_symbols)
     plt.show()
 
+# def create_EMA_Dataframe():
+
+#     All_EMA = []
+
+#     for i in range(len(IDs)):
+#         Price_List = Price_df[Sym_List[i]]
+#         EMA_PL = [Price_List[0]]
+
+#         for i in range(1, len(Price_List)):
+#             EMA_PL.append(0.5*Price_List[i]+(1-0.5)*EMA_PL[i-1])
+#         All_EMA.append(EMA_PL)
+
+#     EMA_P_DF = pandas.DataFrame(All_EMA).T
+
+#     print(EMA_P_DF[::60])
+#     return EMA_P_DF[::60]
+
+
+# EMA_DF = create_EMA_Dataframe()
+
+# def EMA_graph(IDs, Sym_List):
+
+#     for i in range(len(IDs)):
+#         plt.plot(EMA_DF)
+
+#         plt.ylabel("Prices")
+#         plt.xlabel("Epoch")
+#     plt.legend(Sym_List)
+#     plt.show()
+
+# EMA_graph(IDs, Sym_List)
 
 
 if __name__ == "__main__":
