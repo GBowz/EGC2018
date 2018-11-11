@@ -41,7 +41,7 @@ while True:
         if md['is_trading']:
             predictions.append({
                 'instrument_id': md['instrument_id'],
-                'predicted_return': -0.413845 * md['epoch_return']
+                'predicted_return': (-0.3835 * (md['epoch_return']) * (2/3))
             })
 
     pred_req = {'token': token, 'epoch': prediction_epoch, 'predictions': predictions}

@@ -4,14 +4,16 @@ import requests
 #import string
 import time
 #import EGC2018
-from EGC2018 import Line_Names, get_instrument_prices, get_instrument_SMA
+from EGC2018 import Line_Names, get_instrument_prices, get_instrument_SMA, Prices
+import pickle
+import os
 
 #Very simple example to demonstrate usage of the API.
 
-team_name = 'Sexy_Yodellers'.upper()
+team_name = 'Sexy_Yodellers2'.upper()
 password = 'abcdef'.upper()
 
-print(f'team_name = Sexy_Yodellers')
+print(f'team_name = Sexy_Yodellers2')
 print(f'password = abcdef')
 
 #create_res = requests.post('http://egchallenge.tech/team/create', json={'team_name': team_name, 'password': 'password'}).json()
@@ -25,7 +27,20 @@ print(f'token = {token}')
 
 last_epoch = None
 
-Sym_List = Line_Names(list(range(500)))
+all_ids = list(range(1, 501))
+Sym_List = Line_Names(all_ids)
+
+# if os.path.exists("prices.txt"):
+#     stream = open("prices.txt", "rb")
+#     prices = pickle.load(stream)
+#     stream.close()
+# else:
+    # prices = Prices(all_ids, Sym_List)
+#     stream = open("prices.txt", "wb+")
+#     pickle.dump(prices, stream)
+#     stream.close()
+
+prices = Prices(all_ids, Sym_List)
 
 while True:
     epoch_res = requests.get('http://egchallenge.tech/epoch').json()
@@ -43,14 +58,20 @@ while True:
     predictions = []
     for md in marketdata:
         if md['is_trading']:
-            
             ID = md['instrument_id']
-            Symbol = Sym_List[ID]
+            zero_based_index = ID - 1
+            Symbol = Sym_List[zero_based_index]
             Price = md['price']
-            
+
+            prices[Symbol][current_epoch] = Price
+            price_list = prices[Symbol]
+            moving_average = get_instrument_SMA(price_list, 10)
+
+            last_moving_average = moving_average[list(moving_average.keys())[-1]]
+
             predictions.append({
                 'instrument_id': ID,#md['instrument_id'],
-                'predicted_return': -0.417795 * md['epoch_return']
+                'predicted_return': (last_moving_average / Price) - 1
             })
 
     pred_req = {'token': token, 'epoch': prediction_epoch, 'predictions': predictions}
