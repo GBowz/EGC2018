@@ -189,8 +189,9 @@ def show_SMA_graph(data_frame, id_symbols):
     plt.legend(id_symbols)
     plt.show()
 
-IDs = Firm_ID()
-Sym_List = Line_Names(IDs)
-Price_df = Prices(IDs, Sym_List)
-averages_60 = create_SMA_data_frame(IDs, Sym_List, 60, Price_df)
-show_SMA_graph(averages_60, Sym_List)
+if __name__ == "__main__":
+    IDs = Firm_ID()
+    Sym_List = Line_Names(IDs)
+    Price_df = Prices(IDs, Sym_List)
+    averages_60 = create_SMA_data_frame(IDs, Sym_List, 60, Price_df)
+    show_SMA_graph(averages_60, Sym_List)
