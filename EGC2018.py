@@ -141,6 +141,9 @@ def get_instrument_SMA(instrument_price_list, time_window):
     exponential_moving_average = 0
     exponential_weighted_standard_deviation = 0
 
+    last_epoch_price = -2
+    returns = []
+
     while (instrument_epoch_iterator < number_of_epochs):
         running_total = 0
         # TODO: The epoch price might return None eventually, we need to fix this.
@@ -152,6 +155,11 @@ def get_instrument_SMA(instrument_price_list, time_window):
             try:
                 epoch_price = instrument_price_list[instrument_epoch_iterator]
                 running_total += epoch_price
+
+                if last_epoch_price == -2:
+                    last_epoch_price = epoch_price
+                else:
+                    returns.append((epoch_price / last_epoch_price) - 1)
 
                 alpha_decay = 1 - ((number_of_epochs - instrument_epoch_iterator) / number_of_epochs)
                 if (exponential_moving_average == 0):
@@ -182,7 +190,9 @@ def get_instrument_SMA(instrument_price_list, time_window):
         running_deviation_counter += 1
         running_price_list[instrument_epoch_iterator] = running_total
 
-    return running_price_list, running_deviation_list, exponential_moving_average, exponential_weighted_standard_deviation
+    returns = pandas.Series(returns).autocorr(time_window)
+
+    return running_price_list, running_deviation_list, exponential_moving_average, exponential_weighted_standard_deviation, returns
 
 
 # In[277]:

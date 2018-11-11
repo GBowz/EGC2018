@@ -41,6 +41,7 @@ Sym_List = Line_Names(all_ids)
 #     stream.close()
 
 prices = Prices(all_ids, Sym_List)
+amsterdam = 0
 
 while True:
     epoch_res = requests.get('http://egchallenge.tech/epoch').json()
@@ -66,30 +67,33 @@ while True:
             prices[Symbol][current_epoch] = Price
             price_list = prices[Symbol]
 
-            moving_average, standard_deviation, exp_average, exp_std_dev = get_instrument_SMA(price_list, (current_epoch % 60) + 1)
+            moving_average, standard_deviation, exp_average, exp_std_dev, autocorre = get_instrument_SMA(price_list, (current_epoch % 60) + 1)
 
-            # last_moving_average = moving_average[list(moving_average.keys())[-1]]
-            last_moving_average = exp_average
-            # last_moving_standard_deviation = standard_deviation[list(standard_deviation.keys())[-1]]
-            last_moving_standard_deviation = exp_std_dev
-            
+            last_moving_average = moving_average[list(moving_average.keys())[-1]]
+            # last_moving_average = exp_average
+            last_moving_standard_deviation = standard_deviation[list(standard_deviation.keys())[-1]]
+            # last_moving_standard_deviation = exp_std_dev
 
             if last_moving_average == 0:
                 last_moving_average = Price
                 print("Had to correct LMA...")
 
-            predicted_return = ((last_moving_average / Price) * md["epoch_return"] * (last_moving_standard_deviation / last_moving_average))
+            predicted_return = (((last_moving_average + exp_average) / 2) / Price) * md["epoch_return"] * (((exp_std_dev + last_moving_standard_deviation) / 2) / last_moving_average) * ((autocorre + 1) / 2)
 
-            if int(zero_based_index) % 1000 == 0:
+            if zero_based_index < 3:
                 print(Price)
                 print("LMA: " + str(last_moving_average))
                 print("LMSD: " + str(last_moving_standard_deviation))
-                print(predicted_return) 
+                print(predicted_return)
+                print(autocorre)
 
             predictions.append({
                 'instrument_id': ID,#md['instrument_id'],
                 'predicted_return': predicted_return
             })
+
+            if zero_based_index == len(md):
+                amsterdam = predicted_return
 
     pred_req = {'token': token, 'epoch': prediction_epoch, 'predictions': predictions}
     pred_res = requests.post('http://egchallenge.tech/predict', json=pred_req)
@@ -102,6 +106,10 @@ while True:
         epoch = score['epoch']
         sse = score['sse']
         print(f'epoch = {epoch}, sse = {sse}')
+
+        if score == current_epoch - 1:
+            print(scores_res[len(scores_res)-1]["sse"] / scores_res[len(scores_res)-2]["sse"])
+        
 
     next_epoch_in = max(60.0 - (time.time() - timestamp), 0) + 1.0
     print(f'next epoch in {next_epoch_in} sec. Sleeping...')
